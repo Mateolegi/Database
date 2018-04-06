@@ -33,7 +33,6 @@ import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import io.github.mateolegi.database.dao.Crud;
-import io.github.mateolegi.database.util.Filter;
 import io.github.mateolegi.database.util.HibernateUtil;
 import io.github.mateolegi.database.util.TransactionException;
 
@@ -78,16 +77,6 @@ public class CrudImpl<E> implements Crud<E> {
 
 	/*
 	 * (non-Javadoc)
-	 * @see io.github.mateolegi.database.dao.Crud#findAll(io.github.mateolegi.database.util.Filter)
-	 */
-	@Override
-	public List<E> findAll(Filter filter) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	/*
-	 * (non-Javadoc)
 	 * @see io.github.mateolegi.database.dao.Crud#find(int)
 	 */
 	@Override
@@ -108,8 +97,6 @@ public class CrudImpl<E> implements Crud<E> {
 				transaction.rollback();
 			}
 			throw new TransactionException(e);
-		} finally {
-			session.close();
 		}
 	}
 
@@ -119,8 +106,19 @@ public class CrudImpl<E> implements Crud<E> {
 	 */
 	@Override
 	public E save(E entity) {
-		// TODO Auto-generated method stub
-		return null;
+		Transaction transaction = null;
+		try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+			transaction = session.beginTransaction();
+			Object id = session.save(entity);
+			session.evict(entity);
+			transaction.commit();
+			return find(id);
+		} catch (Exception e) {
+			if (transaction != null) {
+				transaction.rollback();
+			}
+			throw new TransactionException(e);
+		}
 	}
 
 	/*
@@ -128,9 +126,21 @@ public class CrudImpl<E> implements Crud<E> {
 	 * @see io.github.mateolegi.database.dao.Crud#update(java.lang.Object)
 	 */
 	@Override
+	@SuppressWarnings("unchecked")
 	public E update(E entity) {
-		// TODO Auto-generated method stub
-		return null;
+		Transaction transaction = null;
+		try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+			transaction = session.beginTransaction();
+			E updatedEntity = (E) session.merge(entity);
+			session.evict(entity);
+			transaction.commit();
+			return updatedEntity;
+		} catch (Exception e) {
+			if (transaction != null) {
+				transaction.rollback();
+			}
+			throw new TransactionException(e);
+		}
 	}
 
 	/*
@@ -139,7 +149,44 @@ public class CrudImpl<E> implements Crud<E> {
 	 */
 	@Override
 	public void delete(E entity) {
-		// TODO Auto-generated method stub
+		Transaction transaction = null;
+		try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+			transaction = session.beginTransaction();
+			session.remove(entity);
+			session.evict(entity);
+			transaction.commit();
+		} catch (Exception e) {
+			if (transaction != null) {
+				transaction.rollback();
+			}
+			throw new TransactionException(e);
+		}
+	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see io.github.mateolegi.database.dao.Crud
+	 * #nativeQuery(java.lang.String, boolean, java.lang.String[])
+	 */
+	@Override
+	public Object nativeQuery(String sql, boolean isList, String... values) {
+		Transaction transaction = null;
+		try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+			transaction = session.beginTransaction();
+			javax.persistence.Query query = session.createNativeQuery(sql);
+			if (values != null) {
+				int index = 1;
+				for (String value: values) {
+					query.setParameter(index++, value);
+				}
+			}
+			transaction.commit();
+			return isList ? query.getResultList() : query.getSingleResult();
+		} catch (Exception e) {
+			if (transaction != null) {
+				transaction.rollback();
+			}
+			throw new TransactionException(e);
+		}
 	}
 }

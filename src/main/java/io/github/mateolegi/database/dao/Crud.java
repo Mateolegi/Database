@@ -25,8 +25,6 @@ package io.github.mateolegi.database.dao;
 
 import java.util.List;
 
-import io.github.mateolegi.database.util.Filter;
-
 /**
  * Capa de acceso a datos genérica
  * @author <a href="https://mateolegi.github.io">Mateo Leal</a>
@@ -39,13 +37,6 @@ public interface Crud<E> {
 	 * @return lista con todos los registros de la tabla
 	 */
 	List<E> findAll();
-
-	/**
-	 * Obtiene todos los registros de una tabla aplicando un filtro
-	 * @param filter filtro de búsqueda
-	 * @return lista con todos los registros filtrados
-	 */
-	List<E> findAll(Filter filter);
 
 	/**
 	 * Obtiene una entidad basada en su identificador
@@ -72,4 +63,13 @@ public interface Crud<E> {
 	 * @param entity entidad que se va a eliminar
 	 */
 	void delete(E entity);
+
+	/**
+	 * Ejecuta una consulta en SQL nativo
+	 * @param sql consulta SQL
+	 * @param isList <code>true</code> si la consulta debe traer varios resultados
+	 * @param values parámetros de la consulta
+	 * @return resultado de la consulta
+	 */
+	Object nativeQuery(String sql, boolean isList, String... values);
 }
