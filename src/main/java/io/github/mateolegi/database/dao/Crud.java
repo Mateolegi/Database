@@ -48,6 +48,7 @@ public interface Crud<E> {
 	/**
 	 * Almacena una entidad en el contexto de persistencia
 	 * @param entity entidad que se va a almacenar
+	 * @return entidad
 	 */
 	E save(E entity);
 
