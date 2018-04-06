@@ -38,6 +38,8 @@ public class HibernateUtil {
 
 	private static SessionFactory sessionFactory;
 
+	private HibernateUtil() { }
+
 	public static synchronized void buildSessionFactory() {
 		if (sessionFactory == null) {
 			Configuration configuration = new Configuration();
@@ -69,7 +71,7 @@ public class HibernateUtil {
 	}
 
 	public static void closeSessionFactory() {
-		if ((sessionFactory != null) && (sessionFactory.isClosed() == false)) {
+		if (sessionFactory != null && !sessionFactory.isClosed()) {
 			sessionFactory.close();
 		}
 	}
